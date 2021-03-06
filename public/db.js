@@ -9,20 +9,27 @@ let db;
  request.onsuccess = function (event) {
    db = event.target.result;
    if (navigator.onLine) {
-     requestDBData();
+    checkDatabase();
    }
  };
 
  request.onerror = function (event) {
-     console.log("Well, it appears that we have an error: " + event.target.errorCode);
-   };
+    console.log("Woops! " + event.target.errorCode);
+};
 
- function requestDBData() {
-     const transaction = db.transaction(["pending"], "readwrite");
-     const store = transaction.objectStore("pending");
-     const getAll = store.getAll();
+function saveRecord(record) {
+  const transaction = db.transaction(["pending"], "readwrite");
+  const store = transaction.objectStore("pending")
 
- getAll.onsuccess = function () {
+  store.add(record);
+ }
+
+ function checkDatabase() {
+    const transaction = db.transaction(["pending"], "readwrite");
+    const store = transaction.objectStore("pending");
+    const getAll = store.getAll();
+ 
+    getAll.onsuccess = function () {
      if (getAll.result.length > 0) {
          fetch("/api/transaction/bulk", {
          method: "POST",
@@ -40,4 +47,14 @@ let db;
      });
      }
    };
- } 
+ }
+ 
+
+function deletePending() {
+  const transaction = db.transaction(["pending"], "readwrite");
+  const store = transaction.objectStore("pending");
+  store.clear();
+}
+
+
+window.addEventListener("online", checkDatabase);
